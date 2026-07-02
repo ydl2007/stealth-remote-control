@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "active_work_id": "stealth-remote-control",
+  "works": {
+    "stealth-remote-control": {
+      "work_id": "stealth-remote-control",
+      "active_plan": ".omo/plans/stealth-remote-control.md",
+      "plan_name": "stealth-remote-control",
+      "session_ids": ["codex:current"],
+      "status": "active",
+      "worktree_path": null
+    }
+  }
+}

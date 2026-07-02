@@ -1,0 +1,3 @@
+# Stealth Remote Control - Client (helper PC) dependencies
+# Run: pip install -r requirements.txt
+Pillow>=10.0.0

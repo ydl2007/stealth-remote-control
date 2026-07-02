@@ -4,63 +4,51 @@
 
 ---
 
-## Cosa devi fare
+## Il modo più facile: compilazione automatica
 
-1. **Installare Visual Studio** (una volta sola)
-2. **Compilare il programma** (un click)
-3. **Copiare l'exe sul PC** (una volta)
-4. **Eseguire** (sempre così)
+1. Copia la cartella del progetto sul PC Windows
+2. Fai **doppio click** su **`build_mingw.bat`**
+3. Il programma:
+   - Cerca MinGW (compilatore C gratuito)
+   - Se non lo trova, lo **scarica e installa automaticamente**
+   - Compila **`stealth_host.exe`** e **`stealth_client.exe`**
+   - Ti dice quando ha finito
+4. I due `.exe` sono pronti nella cartella principale
 
----
-
-## Passo 1: Installa Visual Studio
-
-1. Vai su: https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022
-2. Clicca **"Download Build Tools for Visual Studio 2022"**
-3. Esegui il file scaricato
-4. Nella finestra che si apre, seleziona:
-   - **"Desktop development with C++"**
-5. Clicca **"Install"** in basso a destra
-6. Aspetta che finisca (5-10 minuti, dipende da internet)
-
-✅ Fatto. Visual Studio è installato.
+✅ **Fatto. Non devi installare nulla.**
 
 ---
 
-## Passo 2: Compila il programma
+## Compilazione manuale (se preferisci)
 
-1. Apri il **menu Start**
-2. Cerca e apri **"Developer Command Prompt for VS 2022"** (non il normale cmd)
-3. Nella finestra nera che si apre, scrivi:
+### Con MinGW-w64 (consigliato)
+
+Se hai già MinGW installato:
 
 ```cmd
-cd C:\percorso\dove\hai\salvato\stealth-remote-control\host\core_c
+cd host\core_c
+gcc -o ..\..\stealth_host.exe stealth_host.c -ladvapi32 -liphlpapi -lws2_32 -luser32 -lshlwapi
+cd ..\..\client\core_c
+gcc -o ..\..\stealth_client.exe stealth_client.c -luser32 -lws2_32
 ```
 
-(Sostituisci `C:\percorso\dove\hai\salvato` con il percorso vero — esempio: `C:\Users\Mario\Desktop\stealth-remote-control`)
+### Con Visual Studio
 
-4. Poi scrivi:
+Se preferisci Visual Studio (più grande, ma già presente in alcuni ambienti):
 
-```cmd
-nmake /f Makefile all
-```
-
-5. Se tutto va bene, vedrai:
-
-```
-[+] Compilato: ..\..\stealth_host.exe
-[+] Compilato: ..\..\stealth_client.exe
-```
-
-6. I file `.exe` sono apparsi nella cartella principale `stealth-remote-control\`.
-
-✅ Fatto. Hai due programmi:
-- **`stealth_host.exe`** — da eseguire sul PC che fa l'esame
-- **`stealth_client.exe`** — da eseguire sul PC del complice
+1. Apri **"Developer Command Prompt for VS 2022"** dal menu Start
+2. Vai nella cartella:
+   ```cmd
+   cd C:\percorso\stealth-remote-control\host\core_c
+   ```
+3. Compila:
+   ```cmd
+   nmake /f Makefile all
+   ```
 
 ---
 
-## Passo 3: Esegui sul PC ESAME
+## Esegui sul PC ESAME
 
 Copia **solo `stealth_host.exe`** sul PC che farà l'esame.
 

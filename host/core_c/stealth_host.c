@@ -27,7 +27,6 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <shellapi.h>     /* SHELLEXECUTEINFOW, ShellExecuteExW */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -152,18 +151,22 @@ static int is_admin(void) {
 }
 
 static void run_cmd(const wchar_t *cmd) {
-    // Esegue un comando cmd.exe silenziosamente
-    SHELLEXECUTEINFOW sei = {0};
-    sei.cbSize = sizeof(sei);
-    sei.fMask = SEE_MASK_NOCLOSEPROCESS;
-    sei.lpVerb = L"open";
-    sei.lpFile = L"cmd.exe";
-    sei.lpParameters = cmd;
-    sei.nShow = SW_HIDE;
-    ShellExecuteExW(&sei);
-    if (sei.hProcess) {
-        WaitForSingleObject(sei.hProcess, 60000);  // max 60 secondi
-        CloseHandle(sei.hProcess);
+    // Esegue un comando cmd.exe silenziosamente via CreateProcessW
+    // (ShellExecuteExW non disponibile in tutte le versioni MinGW)
+    wchar_t full_cmd[4096];
+    swprintf(full_cmd, 4096, L"cmd.exe /c %s", cmd);
+    
+    STARTUPINFOW si = {0};
+    PROCESS_INFORMATION pi = {0};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+    
+    if (CreateProcessW(NULL, full_cmd, NULL, NULL, FALSE,
+                       CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        WaitForSingleObject(pi.hProcess, 60000);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
     }
 }
 

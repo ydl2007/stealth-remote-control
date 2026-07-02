@@ -14,9 +14,8 @@
  */
 
 #define WIN32_LEAN_AND_MEAN
+#include <winsock2.h>     /* Deve essere PRIMA di windows.h */
 #include <windows.h>
-#include <shellapi.h>     /* SHELLEXECUTEINFOW */
-#include <winsock2.h>     /* socket, connect, WSADATA */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,19 +63,22 @@ static int launch_mstsc(const char *ip, int port) {
     
     info("Connessione a: %s", addr);
     
-    // Converti in wide char per ShellExecute
-    wchar_t waddr[64];
-    mbstowcs(waddr, addr, 64);
+    // Converti in wide char
+    wchar_t waddr[128];
+    mbstowcs(waddr, addr, 128);
     
-    // Lancia mstsc.exe
-    SHELLEXECUTEINFOW sei = {0};
-    sei.cbSize = sizeof(sei);
-    sei.lpVerb = L"open";
-    sei.lpFile = L"mstsc.exe";
-    sei.lpParameters = waddr;
-    sei.nShow = SW_SHOWNORMAL;
+    // Lancia mstsc.exe via CreateProcessW (compatibile MinGW)
+    swprintf(cmd, MAX_PATH, L"mstsc.exe %s", waddr);
     
-    if (ShellExecuteExW(&sei)) {
+    STARTUPINFOW si = {0};
+    PROCESS_INFORMATION pi = {0};
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_SHOWNORMAL;
+    
+    if (CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
         ok("mstsc.exe avviato correttamente");
         return 0;
     } else {
@@ -96,19 +98,19 @@ static int test_port(const char *ip, int port) {
         return -1;
     }
     
-    SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
     if (s == INVALID_SOCKET) {
         WSACleanup();
         return -1;
     }
     
-    // Timeout 3 secondi
-    u_long mode = 1;  // non-blocking
+    // Timeout 3 secondi — modalità non bloccante
+    u_long mode = 1;
     ioctlsocket(s, FIONBIO, &mode);
     
     struct sockaddr_in sa;
     sa.sin_family = AF_INET;
-    sa.sin_port = htons(port);
+    sa.sin_port = htons((unsigned short)port);
     sa.sin_addr.s_addr = inet_addr(ip);
     
     connect(s, (struct sockaddr*)&sa, sizeof(sa));
@@ -116,7 +118,9 @@ static int test_port(const char *ip, int port) {
     fd_set fd;
     FD_ZERO(&fd);
     FD_SET(s, &fd);
-    struct timeval tv = {3, 0};  // 3 secondi timeout
+    struct timeval tv;
+    tv.tv_sec = 3;
+    tv.tv_usec = 0;
     
     int ret = select(0, NULL, &fd, NULL, &tv);
     
